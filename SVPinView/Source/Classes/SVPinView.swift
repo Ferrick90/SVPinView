@@ -13,6 +13,7 @@ public enum SVPinViewStyle: Int {
     case none = 0
     case underline
     case box
+    case background
 }
 
 @objc
@@ -203,11 +204,7 @@ public class SVPinView: UIView {
         }
     }
     
-    fileprivate func stylePinField(containerView: UIView, underLine: UIView, isActive: Bool) {
-        
-        containerView.backgroundColor = isActive ? activeFieldBackgroundColor : fieldBackgroundColor
-        containerView.layer.cornerRadius = isActive ? activeFieldCornerRadius : fieldCornerRadius
-        
+    fileprivate func stylePinField(containerView: UIView, underLine: UIView, isActive: Bool, isFill: Bool) {
         func setupUnderline(color:UIColor, withThickness thickness:CGFloat) {
             underLine.backgroundColor = color
             underLine.constraints.filter { ($0.identifier == "underlineHeight") }.first?.constant = thickness
@@ -218,15 +215,27 @@ public class SVPinView: UIView {
             setupUnderline(color: UIColor.clear, withThickness: 0)
             containerView.layer.borderWidth = 0
             containerView.layer.borderColor = UIColor.clear.cgColor
+            containerView.backgroundColor = isActive ? activeFieldBackgroundColor : fieldBackgroundColor
+            containerView.layer.cornerRadius = isActive ? activeFieldCornerRadius : fieldCornerRadius
         case .underline:
             if isActive { setupUnderline(color: activeBorderLineColor, withThickness: activeBorderLineThickness) }
             else { setupUnderline(color: borderLineColor, withThickness: borderLineThickness) }
             containerView.layer.borderWidth = 0
             containerView.layer.borderColor = UIColor.clear.cgColor
+            containerView.backgroundColor = isActive ? activeFieldBackgroundColor : fieldBackgroundColor
+            containerView.layer.cornerRadius = isActive ? activeFieldCornerRadius : fieldCornerRadius
         case .box:
             setupUnderline(color: UIColor.clear, withThickness: 0)
             containerView.layer.borderWidth = isActive ? activeBorderLineThickness : borderLineThickness
             containerView.layer.borderColor = isActive ? activeBorderLineColor.cgColor : borderLineColor.cgColor
+            containerView.backgroundColor = isActive ? activeFieldBackgroundColor : fieldBackgroundColor
+            containerView.layer.cornerRadius = isActive ? activeFieldCornerRadius : fieldCornerRadius
+        case .background:
+            setupUnderline(color: UIColor.clear, withThickness: 0)
+            containerView.layer.borderWidth = isFill ? activeBorderLineThickness : borderLineThickness
+            containerView.layer.borderColor = isFill ? activeBorderLineColor.cgColor : borderLineColor.cgColor
+            containerView.backgroundColor = isFill ? activeFieldBackgroundColor : fieldBackgroundColor
+            containerView.layer.cornerRadius = isFill ? activeFieldCornerRadius : fieldCornerRadius
         }
      }
     
@@ -352,7 +361,7 @@ extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICo
         placeholderLabel.text = ""
         placeholderLabel.textColor = self.textColor.withAlphaComponent(0.5)
         
-        stylePinField(containerView: containerView, underLine: underLine, isActive: false)
+        stylePinField(containerView: containerView, underLine: underLine, isActive: false, isFill: false)
         
         // Make the Pin field the first responder
         if let firstResponderIndex = becomeFirstResponderAtIndex, firstResponderIndex == indexPath.item {
@@ -430,14 +439,14 @@ extension SVPinView : UITextFieldDelegate
         
         if let containerView = textField.superview?.viewWithTag(51),
         let underLine = textField.superview?.viewWithTag(50) {
-            self.stylePinField(containerView: containerView, underLine: underLine, isActive: true)
+            self.stylePinField(containerView: containerView, underLine: underLine, isActive: true, isFill: text.count != 0 ? true: false)
         } else { showPinError(error: "ERR-106: Type Mismatch") }
     }
     
     public func textFieldDidEndEditing(_ textField: UITextField) {
         if let containerView = textField.superview?.viewWithTag(51),
         let underLine = textField.superview?.viewWithTag(50) {
-            self.stylePinField(containerView: containerView, underLine: underLine, isActive: false)
+            self.stylePinField(containerView: containerView, underLine: underLine, isActive: false, isFill: textField.text!.count != 0 ? true: false)
         } else { showPinError(error: "ERR-107: Type Mismatch") }
     }
     
